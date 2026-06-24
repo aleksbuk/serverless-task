@@ -16,6 +16,14 @@ export class ProductServiceStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, 'handlers')),
     });
 
+    const getProductsById = new lambda.Function(this, 'GetProductsById', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      memorySize: 1024,
+      timeout: cdk.Duration.seconds(5),
+      handler: 'getProductsById.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, 'handlers')),
+    });
+
     const api = new apigateway.RestApi(this, 'ProductsApi', {
       restApiName: 'Product Service',
       defaultCorsPreflightOptions: {
@@ -26,6 +34,9 @@ export class ProductServiceStack extends cdk.Stack {
 
     const products = api.root.addResource('products');
     products.addMethod('GET', new apigateway.LambdaIntegration(getProductsList));
+
+    const product = products.addResource('{productId}');
+    product.addMethod('GET', new apigateway.LambdaIntegration(getProductsById));
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: api.url });
   }
